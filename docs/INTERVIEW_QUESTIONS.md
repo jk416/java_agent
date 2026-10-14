@@ -303,3 +303,33 @@
        - `Field`：客户端UUID + 当前线程ID（如 `b2f4c...:thread-21`）
        - `Value`：重入计数（整数 `count`）
      - 同一线程再次抢锁时，Lua 脚本判定 Field 一致，直接将 `count + 1`；释放锁时 `count - 1`，直到减为 0 才真正 `DEL`。完全对齐了 Java 原生 `ReentrantLock` 的底层行为。
+
+---
+
+## 模块十：MCP（Model Context Protocol）协议架构全景精讲
+
+### Q22：什么是 MCP（Model Context Protocol）协议？它与普通的 Function Calling 有什么本质区别？为什么被称为 AI 时代的“USB-C”或“JDBC”？
+- **业务场景**：
+  在 `mall-merchant` 服务中，将商户审核状态机封装为 MCP Server，供公司内部多个 Agent 及开发者工具（Cursor / Claude Desktop）跨系统即插即用。
+- **本质区别与架构痛点（核心得分点）**：
+  1. **传统 Function Calling 的“烟囱式”孤岛缺陷**：
+     - 普通 Function Calling 属于**客户端专属硬编码绑定**。
+     - 如果你在 Spring Boot 里写了一个发券工具，这个工具只能给你当前这个 Controller 里的 ChatClient 用。如果公司的客服系统是 Python 写的，运维系统是在 Cursor 里跑的，每个系统都必须重新手写一遍该工具的适配逻辑和 JSON Schema，重复造轮子。
+  2. **MCP 的标准化统一契约**：
+     - MCP 是 Anthropic 提出的**开放标准通信协议（基于 JSON-RPC 2.0）**。
+     - **服务端（MCP Server）**：只管按标准暴露数据与工具，不管谁来调用；
+     - **客户端（MCP Host/Client）**：任何支持 MCP 的 AI 应用（Spring AI MCP、Claude、Cursor、Dify），只需配置一个地址，**无需编写任何业务适配代码，自动发现并直接调度所有工具！**
+     - **USB-C / JDBC 类比**：JDBC 抹平了不同数据库驱动的差异，USB-C 抹平了各种充电线接口；MCP 彻底抹平了“大模型应用”与“外部企业级数据/工具”之间的私有对接壁垒。
+
+### Q23：MCP 协议的核心通信规范与三大核心基石（Tools / Resources / Prompts）是什么？客户端如何实现自动服务发现？
+- **核心得分点**：
+  1. **底层通信传输层（Transport Layer）**：
+     - **Stdio 模式**：通过标准输入输出（stdin / stdout）进程间通信，常用于本地开发工具（如 Cursor / 本地 CLI）；
+     - **SSE (HTTP + Server-Sent Events) 模式**：基于标准 HTTP 长连接与 POST 反向调用，是**企业级微服务分布式部署的标准形态**。
+  2. **三大核心抽象原语（三大基石）**：
+     - **Tools（可执行工具）**：具有副作用的动态计算函数（如 `queryAuditStatus`、执行转账、重启 Pod），大模型可自主开单调用并获取执行结果。
+     - **Resources（只读静态资源）**：类似 RESTful 的只读文件/数据流（如 `merchant://audit/standards` 资质字典、日志文件、数据库元数据），相当于为大模型外挂了只读知识库。
+     - **Prompts（提示词模版）**：Server 端预设的专家级交互模板，客户端可按需拉取渲染。
+  3. **服务自动发现流程（Auto-Discovery）**：
+     - 客户端连接 MCP Server 后，首先发送 JSON-RPC 方法 `tools/list` 与 `resources/list`；
+     - Server 自动将注册的所有方法签名和文档一次性全量推给 Client，Client 端的大模型即可无缝感知所有能力。

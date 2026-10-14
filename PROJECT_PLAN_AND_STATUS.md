@@ -72,16 +72,16 @@
   - **落地文件**：`src/main/java/com/aim/ai/agent/IdempotentPromotionService.java`
   - **核心产出**：参数自愈校验拦截，Redis 分布式锁防重幂等，UUID 唯一标识与防误删思想。
   - **八股串联**：Redis SETNX 误删锁缺陷、Lua 脚本原子释放、Redisson 看门狗续期与 Hash 可重入机制。
-- [ ] **第 9 关：MCP（Model Context Protocol）协议落地** 👈 **【当前进行中】**
-  - **目标文件**：`src/main/java/com/aim/ai/mcp/MerchantAuditMcpService.java`
-  - **核心技术**：理解 MCP 客户端/服务端架构，将商户入驻资质状态机封装为标准的 MCP Tool 与 Resource 协议规范。
-  - **八股串联**：MCP vs Function Calling 的本质区别、AI 时代的“JDBC”标准化协议。
+- [x] **第 9 关：MCP（Model Context Protocol）协议落地**
+  - **落地文件**：`src/main/java/com/aim/ai/mcp/MerchantAuditMcpService.java`
+  - **核心产出**：商户进件资质状态机标准化 MCP Tool（`queryAuditStatus`）与只读 Resource 协议暴露。
+  - **八股串联**：MCP vs Function Calling 本质区别（AI 时代的 JDBC）、Tools / Resources / Prompts 三大基石、JSON-RPC 2.0 自动服务发现。
 
 ---
 
 ### 阶段四：高可用工程化护城河与简历突击（Day 24 ~ Day 30）
-- [ ] **第 10 关：多模型熔断降级与 Redis 令牌桶限流（RPM/TPM）**
-  - **核心技术**：主备模型灾备切换（DeepSeek 超时降级 Qwen），Redis + Lua 分布式限流防击穿。
+- [ ] **第 10 关：多模型熔断降级与 Redis 令牌桶限流（RPM/TPM）** 👈 **【待办】**
+  - **核心技术**：主备多模型灾备切换（DeepSeek 超时降级 Qwen），Redis + Lua 分布式令牌桶限流防击穿与成本管控。
 - [ ] **第 11 关：Langfuse 链路可观测性接入**
   - **核心技术**：Trace 链路追踪、Token 消耗与 Latency 监控。
 - [ ] **第 12 关：简历深度精修与 30 题全真模拟面试**

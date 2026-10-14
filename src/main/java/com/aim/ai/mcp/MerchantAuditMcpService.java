@@ -20,17 +20,20 @@ public class MerchantAuditMcpService {
             String auditStatus, // PENDING(待审核), REJECTED(已驳回), APPROVED(已通过)
             String rejectReason,
             String auditTime
-    ) {}
+    ) {
+    }
 
     /**
      * MCP Tool 入参
      */
-    public record AuditStatusQueryRequest(String merchantId) {}
+    public record AuditStatusQueryRequest(String merchantId) {
+    }
 
     /**
      * MCP Resource 资源元数据对象
      */
-    public record McpResourceResponse(String uri, String name, String mimeType, String content) {}
+    public record McpResourceResponse(String uri, String name, String mimeType, String content) {
+    }
 
     /**
      * 1. 标准化 MCP Tool：查询商户进件状态机当前节点与驳回原因
@@ -45,13 +48,19 @@ public class MerchantAuditMcpService {
         // 【你的核心实战区域 1】：状态机查询与自愈防御
         // 目标：
         // 1. 如果 merchantId 为空，返回非法提示状态；
+        if (!StringUtils.hasText(request.merchantId())) {
+            return new MerchantAuditState("", "ILLEGAL", "商户ID不能为空", "");
+        }
         // 2. 模拟根据 merchantId 返回状态机真实数据：
         //    - 若 merchantId 是 "9999"，模拟返回 REJECTED(驳回)，驳回原因为 "营业执照经营范围与所选主营类目不符，缺少食品经营许可证"；
         //    - 其它商户ID，模拟返回 APPROVED(已通过)，驳回原因留空；
+        if ("9999".equals(request.merchantId())) {
+            return new MerchantAuditState("9999", "REJECTED", "营业执照经营范围与所选主营类目不符，缺少食品经营许可证", "");
+        } else {
+            return new MerchantAuditState(request.merchantId(), "APPROVED", "", "");
+        }
         // -------------------------------------------------------------------------
 
-        // TODO: 请替换下方的 return 语句，写下你的核心实现
-        return new MerchantAuditState(request.merchantId(), "UNKNOWN", "未查询到商户进件记录", "");
     }
 
     /**
@@ -71,8 +80,12 @@ public class MerchantAuditMcpService {
         // - mimeType: "text/markdown"
         // - content: "1. 营业执照有效期必须大于3个月\n2. 涉及食品类目必须提供《食品经营许可证》\n3. 法人身份证正反面必须清晰无反光"
         // -------------------------------------------------------------------------
-
+        String content = """
+                1. 营业执照有效期必须大于 3 个月；
+                2. 涉及食品类目必须提供《食品经营许可证》；
+                3. 法人身份证正反面必须清晰无反光。
+                """;
         // TODO: 请替换下方的 return 语句，写下你的核心实现
-        return new McpResourceResponse("merchant://audit/standards", "资质标准", "text/plain", "");
+        return new McpResourceResponse("merchant://audit/standards", "资质标准", "text/plain", content);
     }
 }
